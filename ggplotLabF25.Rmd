@@ -43,26 +43,28 @@ heights %>% ggplot(aes(x=height)) + geom_histogram(binwidth = 20)
 Smooth this out to an emperical density with `geom_density()`
 
 ```{r}
-heights %>% ggplot(aes(x=height)) + geom_histogram(binwidth = 1)+ geom_density()
+heights %>% ggplot(aes(x=height)) + geom_density()
 
 ```
 
 Use a new argument in the `aes()`, `group =` to split this density by sex
 
 ```{r}
-heights %>% ggplot(aes(x=height,group=sex,color=sex,fill=sex,alpha=.6)) + geom_histogram(binwidth = 1)  + geom_density()
+heights %>% ggplot(aes(x=height,group=sex))   + geom_density()
+
 ```
 
 OR we can do it with `color` or `fill.` If you say you want to color by sex, R knows that you want a different curve for each of them.
 
 ```{r}
-
+heights %>% ggplot(aes(x=height,group=sex,color=sex,fill=sex,))   + geom_density()
 
 ```
 
 If you've used fill, then there is now a slight issue that they are overlapped. We can fix this with alpha transparency!
 
 ```{r}
+heights %>% ggplot(aes(x=height,group=sex,color=sex,fill=sex)) + geom_density(alpha=.6)
 
 
 ```
@@ -78,21 +80,22 @@ heights %>% ggplot(aes(x=height))+geom_boxplot()
 Find the mean and median overall. 
 
 ```{r}
-
+heights %>% summarise(avg_height = mean(height),median_height  = median(height))
 ```
 
 Find the mean and median for both groups. 
 
 ```{r}
 
-heights %>% summarise(mean(height),median(height))
+heights %>% summarise(avg_height = mean(height),median_height = median(height),.by=sex)
 ```
 
 How tall is the tallest woman? How short is the shortest man? 
 
 ```{R}
-heights %>% group_by(sex) %>% slice_max(height)
-
+heights %>% filter(sex == 'Female') %>% slice_max(height)
+heights %>% filter(sex == 'Male') %>% slice_min(height)
+print('The tallest woman is 79 inches and the shortest man is 50 inches')
 ```
 
 ## Presidental Elections Data
@@ -278,13 +281,14 @@ glimpse(penguins)
 We can use boxplots to visualize the distribution of weight (body_mass_g) within each species:
 
 ```{r}
-penguins %>% ggplot(aes(x=body_mass_g))+geom_boxplot(aes(group=species,fill=species))
+penguins %>%drop_na(body_mass_g) %>%  ggplot(aes(x=body_mass_g,y=species))+geom_boxplot()
 
 ```
 
 What if we also want the points? Layering!! Add a geom_point to your existing boxplot. geom_boxplot + geom_point!
 
 ```{r}
+penguins %>% drop_na(body_mass_g) %>% ggplot(aes(x=body_mass_g,y=species))+ geom_boxplot() + geom_point()
 
 
 ```
@@ -292,6 +296,7 @@ What if we also want the points? Layering!! Add a geom_point to your existing bo
 But, these are all stacked up... to actually see them, use "geom_jitter" instead of points
 
 ```{r}
+penguins %>% drop_na(body_mass_g) %>% ggplot(aes(x=body_mass_g,y=species))+ geom_boxplot() + geom_point()
 
 
 ```
@@ -300,6 +305,7 @@ How to get the boxplots on top? The layers are plotted in the order you give the
 
 ```{r}
 
+penguins %>% drop_na(body_mass_g) %>% ggplot(aes(x=body_mass_g,y=species,alpha=.6))+ geom_point()+geom_boxplot()
 
 
 ```
@@ -307,6 +313,7 @@ How to get the boxplots on top? The layers are plotted in the order you give the
 Maybe let's try replacing the boxplot with a `geom_violin()`?
 
 ```{r}
+penguins %>% drop_na(body_mass_g) %>% ggplot(aes(x=body_mass_g,y=species))+ geom_violin()
 
 
 
@@ -323,7 +330,13 @@ Maybe let's try replacing the boxplot with a `geom_violin()`?
 -   Plot the density of the body mass, colored by year
 
 ```{r}
+penguins %>% group_by(species) %>% count(sex)
+penguins %>% drop_na(body_mass_g) %>% group_by(island) %>% summarise(mean(body_mass_g))
+penguins %>% drop_na(bill_length_mm) %>% group_by(sex) %>% summarise(avg_bill_length_mm = mean(bill_length_mm))
 
+penguins %>% filter(sex=='female') %>% ggplot(aes(x=bill_length_mm,y=bill_depth_mm)) + geom_point()
+penguins %>% ggplot(aes(x=flipper_length_mm,y=body_mass_g,color=species))+geom_point()+ facet_wrap(~island)
 
-
+penguins %>% ggplot(aes(x=flipper_length_mm,color=sex)) + geom_density()
+penguins %>% drop_na(body_mass_g) %>% ggplot(aes(x=body_mass_g,color=factor(year)))+ geom_density() + labs(color='Year')
 ```
